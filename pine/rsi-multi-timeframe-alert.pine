@@ -1,0 +1,45 @@
+//@version=5
+indicator("RSI Multi-Timeframe Alert Bot", overlay=false, format=format.price, precision=2)
+
+// ========== PARAMETERS ==========
+rsiLength = input.int(14, "RSI Period", minval=1, maxval=100, group="RSI")
+rsiOverbought = input.int(70, "Overbought Level", minval=50, maxval=100, group="RSI")
+rsiOversold = input.int(30, "Oversold Level", minval=1, maxval=50, group="RSI")
+
+tf1 = input.timeframe("1", "TF 1", group="Timeframes")
+tf2 = input.timeframe("5", "TF 2", group="Timeframes")
+tf3 = input.timeframe("15", "TF 3", group="Timeframes")
+tf4 = input.timeframe("60", "TF 4", group="Timeframes")
+tf5 = input.timeframe("240", "TF 5", group="Timeframes")
+
+minInterval = input.int(60, "Min interval (min)", minval=1, group="Alerts")
+
+// ========== RSI ==========
+calcRSI(tf) =>
+    c = request.security(syminfo.tickerid, tf, close)
+    ta.rsi(c, rsiLength)
+
+r1 = calcRSI(tf1)
+r2 = calcRSI(tf2)
+r3 = calcRSI(tf3)
+r4 = calcRSI(tf4)
+r5 = calcRSI(tf5)
+
+// ========== Signals ==========
+ob = ta.crossover(r1, rsiOverbought) or ta.crossover(r2, rsiOverbought) or ta.crossover(r3, rsiOverbought) or ta.crossover(r4, rsiOverbought) or ta.crossover(r5, rsiOverbought)
+os = ta.crossunder(r1, rsiOversold) or ta.crossunder(r2, rsiOversold) or ta.crossunder(r3, rsiOversold) or ta.crossunder(r4, rsiOversold) or ta.crossunder(r5, rsiOversold)
+
+// ========== Alert ==========
+if ob or os
+    msg = (os ? "BUY" : "SELL") + " - " + syminfo.tickerid + " | RSI: " + str.tostring(r1, "#.#")
+    alert(msg, alert.freq_once_per_bar_close)
+
+// ========== Visuals ==========
+hline(rsiOverbought, color=color.red, linestyle=hline.style_dashed)
+hline(rsiOversold, color=color.green, linestyle=hline.style_dashed)
+hline(50, color=color.gray, linestyle=hline.style_dotted)
+
+plot(r1, tf1, color.blue, 2)
+plot(r2, tf2, color.purple, 1)
+plot(r3, tf3, color.orange, 1)
+plot(r4, tf4, color.red, 1)

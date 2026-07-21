@@ -1,0 +1,16 @@
+{
+  "name": "tradingview-rsi-alert-bot",
+  "version": "1.0.0",
+  "description": "RSI Multi-Timeframe Alert Bot for TradingView -> Telegram & Bale",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3"
+  }
+}

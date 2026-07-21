@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSI Alert Bot — TradingView</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#0d1117;color:#e0e0e0}
+    .container{max-width:700px;margin:0 auto;padding:20px}
+    .header{text-align:center;padding:30px 20px}
+    .header h1{color:#7c3aed;font-size:28px}
+    .header p{color:#6b7280;font-size:14px;margin-top:6px}
+    .card{background:#1e1e2e;border:1px solid #313244;border-radius:12px;padding:20px;margin-bottom:16px}
+    .card h2{font-size:16px;color:#7c3aed;margin-bottom:12px}
+    .card label{display:block;font-size:13px;color:#6b7280;margin-bottom:4px}
+    .card input{width:100%;background:#0d1117;border:1px solid #313244;border-radius:8px;padding:10px;color:#e0e0e0;font-size:14px;margin-bottom:12px;direction:ltr;text-align:left}
+    .card textarea{width:100%;background:#0d1117;border:1px solid #313244;border-radius:8px;padding:10px;color:#e0e0e0;font-size:13px;min-height:100px;margin-bottom:12px;direction:ltr;text-align:left;font-family:monospace}
+    .btn{background:#7c3aed;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+    .btn:hover{background:#6d28d9}
+    .btn-green{background:#22c55e}
+    .status{display:flex;gap:8px;align-items:center;margin-bottom:12px;font-size:13px}
+    .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+    .dot.green{background:#22c55e}
+    .dot.red{background:#ef4444}
+    .dot.yellow{background:#f59e0b}
+    pre{background:#0d1117;padding:12px;border-radius:8px;font-size:13px;direction:ltr;text-align:left;overflow:auto;margin-top:8px}
+    code{color:#22c55e}
+    .footer{text-align:center;padding:20px;font-size:12px;color:#6b7280}
+    .footer a{color:#7c3aed;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 RSI Alert Bot</h1>
+      <p>TradingView → Telegram & Bale — Multi-Timeframe RSI Signals</p>
+    </div>
+
+    <div class="card" id="statusCard">
+      <h2>📡 Server Status</h2>
+      <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Checking...</span></div>
+      <div class="status">Telegram: <span id="tgStatus">❌</span></div>
+      <div class="status">Bale: <span id="baleStatus">❌</span></div>
+      <div class="status">Rate Limit: <span id="rateLimit">-</span></div>
+    </div>
+
+    <div class="card">
+      <h2>🔌 TradingView Webhook URL</h2>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:8px">این آدرس رو توی Alert TradingView به عنوان Webhook URL قرار بدین:</p>
+      <input type="text" id="webhookUrl" readonly onclick="this.select()" />
+      <p style="font-size:12px;color:#6b7280;margin-top:6px">
+        توی TradingView Alert -> Webhook URL قرار بدید. Pine Script آماده توی پوشه <code>pine/</code> هست.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>🧪 Test Alert</h2>
+      <p style="font-size:13px;color:#6b7280;margin-bottom:8px">یه سیگنال تست بفرست تا ببینی تلگرام/بله کار میکنه:</p>
+      <button class="btn btn-green" onclick="testAlert()">📨 Send Test Alert</button>
+      <div id="testResult" style="margin-top:8px;font-size:13px;color:#a0a0b0"></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 Recent Alerts Log</h2>
+      <div id="log"><p style="color:#6b7280;font-size:13px">No alerts yet. Console shows live logs.</p></div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ How to Setup</h2>
+      <p style="font-size:13px;color:#a0a0b0;line-height:1.8">
+        1️⃣ <b>Copy</b> the Pine Script from <code>pine/</code> folder to TradingView<br/>
+        2️⃣ <b>Add</b> the indicator to your chart<br/>
+        3️⃣ <b>Create Alert</b> → select this indicator → Webhook URL<br/>
+        4️⃣ <b>Paste</b> the webhook URL above<br/>
+        5️⃣ <b>Done!</b> Signals will appear in Telegram & Bale
+      </p>
+    </div>
+
+    <div class="footer">
+      Built with ❤️ by <a href="https://t.me/llllxyz">Mohammad</a>
+    </div>
+  </div>
+
+  <script>
+    fetch('/api/status').then(r=>r.json()).then(d=>{
+      document.getElementById('statusDot').className='dot '+(d.status==='running'?'green':'red');
+      document.getElementById('statusText').textContent=d.status==='running'?'✅ Online':'❌ Offline';
+      document.getElementById('tgStatus').textContent=d.telegram?'✅ Configured':'❌ Not set';
+      document.getElementById('baleStatus').textContent=d.bale?'✅ Configured':'❌ Not set';
+      document.getElementById('rateLimit').textContent=d.alertInterval;
+      document.getElementById('webhookUrl').value=window.location.origin+'/api/webhook/tradingview';
+    });
+
+    async function testAlert(){
+      const btn=event.target;btn.disabled=true;btn.textContent='⏳ Sending...';
+      const res=await fetch('/api/test');const d=await res.json();
+      document.getElementById('testResult').innerHTML=d.telegram?'✅ Telegram: OK':'❌ Telegram: Failed';
+      document.getElementById('testResult').innerHTML+='<br/>'+(d.bale?'✅ Bale: OK':'❌ Bale: Failed');
+      btn.disabled=false;btn.textContent='📨 Send Test Alert';
+    }
+  </script>
+</body>
+</html>
