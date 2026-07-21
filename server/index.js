@@ -36,7 +36,7 @@ app.post('/api/webhook/tradingview', async (req, res) => {
     const emoji = signal === 'BUY' ? '🟢' : '🔴';
 
     // Format beautiful message
-    const formatted = `${emoji} <b>RSI SIGNAL: ${signal}</b>
+    const formatted = parser.formatAlertMessage(parsed);
 ━━━━━━━━━━━━━━━━━━
 <b>Symbol:</b> ${symbol}
 <b>Price:</b> ${parsed.price || '?'}
