@@ -37,15 +37,6 @@ app.post('/api/webhook/tradingview', async (req, res) => {
 
     // Format beautiful message
     const formatted = parser.formatAlertMessage(parsed);
-━━━━━━━━━━━━━━━━━━
-<b>Symbol:</b> ${symbol}
-<b>Price:</b> ${parsed.price || '?'}
-<b>Signal:</b> ${signal}
-${Object.entries(parsed.rsi).map(([tf, v]) => ` TF ${tf}: ${v}`).join('\n')}
-<b>Time:</b> ${new Date().toLocaleString('fa-IR')}
-━━━━━━━━━━━━━━━━━━
-🤖 <a href="https://t.me/llllxyz">TradingView RSI Bot</a>`;
-
     if (!canSendAlert(symbol, signal)) {
       return res.json({ status: 'rate_limited', message: 'Too soon for same symbol/signal' });
     }
